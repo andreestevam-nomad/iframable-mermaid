@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>iframable-mermaid</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: sans-serif;
+    }
+
+    #inputView {
+      padding: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-width: 80vw;
+      height: 300px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    button {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 16px;
+    }
+
+    #diagram {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #diagram svg {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="inputView" style="display: none;">
+    <h1>iframable-mermaid</h1>
+    <textarea id="diagramInput" placeholder="Enter Mermaid diagram code here..."></textarea><br/>
+    <button onclick="generateDiagram()">Generate</button>
+  </div>
+
+  <div id="diagram"></div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: false });
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function generateDiagram() {
+      const text = document.getElementById("diagramInput").value;
+      const encoded = btoa(encodeURIComponent(text));
+      const newUrl = `${window.location.origin}${window.location.pathname}?diagram=${encoded}`;
+      window.location.href = newUrl;
+    }
+
+    async function renderDiagram(text) {
+      const diagramDiv = document.getElementById("diagram");
+      try {
+        const { svg } = await mermaid.render('theGraph', text);
+        diagramDiv.innerHTML = svg;
+      } catch (e) {
+        diagramDiv.innerHTML = `<pre>Error rendering diagram: ${e.message}</pre>`;
+      }
+    }
+
+    const diagramInput = document.getElementById("diagramInput");
+    const inputView = document.getElementById("inputView");
+    const diagramDiv = document.getElementById("diagram");
+
+    function onDiagramInputChange() {
+      const text = diagramInput.value.trim();
+      renderDiagram(text);
+    }
+
+    diagramInput.addEventListener("input", onDiagramInputChange);
+
+    const base64Diagram = getQueryParam("diagram");
+
+    if (base64Diagram) {
+      try {
+        const decoded = decodeURIComponent(atob(base64Diagram));
+        renderDiagram(decoded);
+        inputView.style.display = "none"; 
+      } catch (err) {
+        document.body.innerHTML = "<pre>Error decoding diagram</pre>";
+      }
+    } else {
+      inputView.style.display = "block";
+      diagramDiv.style.display = "block"; 
+    }
+  </script>
+</body>
+</html>
