@@ -91,18 +91,27 @@
     diagramInput.addEventListener("input", onDiagramInputChange);
 
     const base64Diagram = getQueryParam("diagram");
+    const editMode = getQueryParam("edit") === "true";
 
     if (base64Diagram) {
       try {
         const decoded = decodeURIComponent(atob(base64Diagram));
-        renderDiagram(decoded);
-        inputView.style.display = "none"; 
+        if (editMode) {
+          diagramInput.value = decoded;
+          inputView.style.display = "block";
+          diagramDiv.style.display = "block";
+          renderDiagram(decoded); // Render the diagram in edit mode as well
+        } else {
+          renderDiagram(decoded);
+          inputView.style.display = "none";
+        }
       } catch (err) {
+        console.error(err);
         document.body.innerHTML = "<pre>Error decoding diagram</pre>";
       }
     } else {
       inputView.style.display = "block";
-      diagramDiv.style.display = "block"; 
+      diagramDiv.style.display = "block";
     }
   </script>
 </body>
